@@ -6,11 +6,14 @@ import time
 import re
 from dotenv import load_dotenv
 import os
+from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
 app = Flask(__name__)
 
+# Enabling CORS for all routes
+CORS(app)
 # Configuration
 BEARER_TOKEN = os.getenv("BEARER_TOKEN" )
 REQUEST_LIMIT = 100
