@@ -1,0 +1,49 @@
+name: Scraper Deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # Lint and Test (optional, add actual tests if applicable)
+    - name: Lint and test
+      run: |
+        echo "Running linter..."
+        pip install flake8
+        flake8 .
+        echo "Running tests..."
+        # Add your test commands here, e.g., pytest or unit tests.
+
+    # Deploy to production (using Gunicorn)
+    - name: Deploy application
+      run: |
+        echo "Starting deployment..."
+        pip install gunicorn
+        gunicorn app:app --workers=4 --bind=0.0.0.0:8000
+    - name: Set environment variables
+      run: echo "BEARER_TOKEN=${{ secrets.SCRAPER_BEARER_TOKEN }}" >> $GITHUB_ENV
+
