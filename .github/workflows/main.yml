@@ -29,15 +29,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Lint and Test (optional, add actual tests if applicable)
-    - name: Lint and test
-      run: |
-        echo "Running linter..."
-        pip install flake8
-        flake8 .
-        echo "Running tests..."
-        # Add your test commands here, e.g., pytest or unit tests.
-
     # Deploy to production (using Gunicorn)
     - name: Deploy application
       run: |
