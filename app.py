@@ -44,22 +44,39 @@ async def scrape_website(url):
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=10, headers={'User-Agent': 'LowEndAPI/1.0'}) as response:
                 if response.status != 200:
-                    return {'status': 'error', 'error': 'Failed to fetch the website', 'status_code': response.status}
+                    return {'error': 'Failed to fetch the website', 'status_code': response.status}, response.status
 
                 html = await response.text()
                 soup = BeautifulSoup(html, 'html.parser')
 
-                # Extract key information
-                headings = {f'h{i}': [tag.text.strip() for tag in soup.find_all(f'h{i}', limit=5)] for i in range(1, 4)}
-                links = [{'text': link.text.strip(), 'href': link.get('href')} for link in soup.find_all('a', href=True, limit=10)]
+                # Extract headings
+                headings = {f'h{i}': [tag.text.strip() for tag in soup.find_all(f'h{i}')] for i in range(1, 7)}
+
+                # Extract links from anchor tags
+                links_from_tags = [{'text': link.text.strip(), 'href': link.get('href')} for link in soup.find_all('a', href=True)]
+
+                # Extract full content
+                full_content = soup.get_text(separator='\n', strip=True)
+
+                # Extract links from the content
+                url_pattern = r'(https?://[^\s]+)'
+                links_from_content = re.findall(url_pattern, full_content)
+
+                # Extract images
+                images = [{'src': img.get('src'), 'alt': img.get('alt', '')} for img in soup.find_all('img')]
+
+                # Extract metadata
                 metadata = {meta.get('name', meta.get('property', 'unknown')): meta.get('content', '')
-                            for meta in soup.find_all('meta', limit=10) if meta.get('content')}
+                            for meta in soup.find_all('meta') if meta.get('content')}
 
                 return {
                     'status': 'success',
                     'headings': headings,
-                    'links': links,
-                    'metadata': metadata
+                    'links_from_tags': links_from_tags,
+                    'links_from_content': links_from_content,
+                    'images': images,
+                    'metadata': metadata,
+                    'content': full_content
                 }
     except aiohttp.ClientError as e:
         return {'status': 'error', 'error': 'Error fetching website', 'details': str(e)}
@@ -81,8 +98,7 @@ async def scrape():
         return jsonify({'status': 'error', 'error': 'URL parameter is required'}), 400
 
     request_count += 1
-    data = await scrape_website(url)
-    return jsonify(data)
+    return jsonify(await scrape_website(url))
 
 @app.route('/', methods=['GET'])
 def status():
