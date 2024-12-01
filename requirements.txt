@@ -1,4 +1,5 @@
 flask
+flask[async]
 beautifulsoup4
 requests
 python-dotenv
